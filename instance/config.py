@@ -17,6 +17,7 @@ class StagingConfig(Config):
     """Configurations for staging
     """
     TESTING = True
+    DATABASE_URI = os.getenv('DATABASE_URI')
 
 
 class TestingConfig(Config):
@@ -24,6 +25,7 @@ class TestingConfig(Config):
     """
     DEBUG = True
     TESTING = True
+    DATABASE_URI = os.getenv('TEST_DATABASE_URI')
 
 
 app_config = {
