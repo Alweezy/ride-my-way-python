@@ -1,0 +1,16 @@
+services:
+  - postgresql
+before_script:
+  - psql -c 'create database stackoverflow_test;' -U postgres
+  - psql -c 'create user alweezy;' -U postgres
+  - python manage.py create_db
+language: python
+python:
+  - "3.6"
+install:
+ - "pip install -r requirements.txt"
+ - "pip install python-coveralls"
+script:
+ - nosetests  --with-coverage --cover-package=api
+after_success:
+    - coveralls
