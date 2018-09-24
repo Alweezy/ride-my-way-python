@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta
 
 import jwt
@@ -44,7 +43,7 @@ class User(db.Model):
 
             jwt_string = jwt.encode(
                 payload,
-                os.getenv("SECRET_KEY"),
+                current_app.config.get("SECRET_KEY"),
                 algorithm='HS256'
             )
 
@@ -58,7 +57,7 @@ class User(db.Model):
         """Decodes the token passed in the header
         """
         try:
-            key = current_app.config("SECRET_KEY")
+            key = current_app.config.get("SECRET_KEY")
             payload = jwt.decode(token, key)
             return payload["sub"]
 
