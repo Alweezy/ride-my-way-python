@@ -5,7 +5,7 @@ class Config(object):
     DEBUG = False
     CSRF_ENABLED = True
     SECRET_KEY = os.getenv('SECRET_KEY')
-    DATABASE_URI = os.getenv('DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URI')
 
 
 class ProductionConfig(Config):
@@ -16,8 +16,9 @@ class ProductionConfig(Config):
 class StagingConfig(Config):
     """Configurations for staging
     """
+    DEBUG = True
     TESTING = True
-    DATABASE_URI = os.getenv('DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URI')
 
 
 class TestingConfig(Config):
@@ -25,7 +26,7 @@ class TestingConfig(Config):
     """
     DEBUG = True
     TESTING = True
-    DATABASE_URI = os.getenv('TEST_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URI')
 
 
 app_config = {
