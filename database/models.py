@@ -18,7 +18,7 @@ class User(db.Model):
     username = db.Column(db.String(255), nullable=False, unique=True)
     email = db.Column(db.String(255), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
-    questions = db.relationship('Question', order_by="Question.id",
+    questions = db.relationship('Question', backref="users", order_by="Question.id",
                                 cascade="all,delete-orphan")
 
     def __init__(self, username, email, password):
@@ -44,7 +44,7 @@ class User(db.Model):
 
             jwt_string = jwt.encode(
                 payload,
-                os.getenv("SECRET_KEY"),
+                current_app.config.get("SECRET_KEY"),
                 algorithm='HS256'
             )
 
@@ -58,7 +58,7 @@ class User(db.Model):
         """Decodes the token passed in the header
         """
         try:
-            key = current_app.config("SECRET_KEY")
+            key = current_app.config.get("SECRET_KEY")
             payload = jwt.decode(token, key)
             return payload["sub"]
 
@@ -86,7 +86,7 @@ class Question(db.Model):
     date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
     date_modified = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
     asked_by = db.Column(db.Integer, db.ForeignKey(User.id))
-    answers = db.relationship('Answer', order_by="Answer.id", cascade="all,delete-orphan")
+    answers = db.relationship('Answer', order_by="Answer.id", backref="questions", cascade="all,delete-orphan")
 
     def __init__(self, title, asked_by):
         self.title = title
@@ -96,6 +96,12 @@ class Question(db.Model):
         """Save a question to the database
         """
         db.session.add(self)
+        db.session.commit()
+
+    def delete(self):
+        """Delete a question
+        """
+        db.session.delete(self)
         db.session.commit()
 
 
