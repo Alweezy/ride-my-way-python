@@ -8,13 +8,37 @@ from flask import current_app
 from api.app import db
 
 
-class User(db.Model):
+class Base(db.Model):
+
+    __abstract__ = True
+
+    """creates the base class from which all models inherit
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
+    date_modified = db.Column(db.DateTime,
+                              default=db.func.current_timestamp(),
+                              onupdate=db.func.current_timestamp())
+
+    def save(self):
+
+        """Save an entry into the database
+        """
+        db.session.add(self)
+        db.session.commit()
+
+    def delete(self):
+        """Delete an entry
+        """
+        db.session.delete(self)
+        db.session.commit()
+
+
+class User(Base):
     """Creates a user model
     """
-
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), nullable=False, unique=True)
     email = db.Column(db.String(255), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
@@ -68,59 +92,52 @@ class User(db.Model):
         except jwt.InvalidTokenError:
             return "Token is invalid, Sign up or Login"
 
-    def save(self):
-        """Save a user into the database
-        """
-        db.session.add(self)
-        db.session.commit()
 
-
-class Question(db.Model):
+class Question(Base):
     """Creates a model for the Question
     """
 
     __tablename__ = "questions"
 
-    id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
-    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
-    date_modified = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
     asked_by = db.Column(db.Integer, db.ForeignKey(User.id))
-    answers = db.relationship('Answer', order_by="Answer.id", backref="questions", cascade="all,delete-orphan")
+    answers = db.relationship('Answer', order_by="Answer.id",
+                              backref="questions",
+                              cascade="all,delete-orphan")
+    translations = db.relationship("QuestionsTranslation", order_by="QuestionsTranslation.id",
+                                   backref="questions",
+                                   cascade="all,delete-orphan")
 
     def __init__(self, title, asked_by):
         self.title = title
         self.asked_by = asked_by
 
-    def save(self):
-        """Save a question to the database
-        """
-        db.session.add(self)
-        db.session.commit()
 
-    def delete(self):
-        """Delete a question
-        """
-        db.session.delete(self)
-        db.session.commit()
+class QuestionsTranslation(Base):
+    """Stores different translations
+    """
+    __tablename__ = "translations"
+
+    language = db.Column(db.String(20))
+    translated_title = db.Column(db.String(255))
+    question_id = db.Column(db.Integer, db.ForeignKey(Question.id))
+
+    def __init__(self, language, translated_title, question_id):
+        self.language = language
+        self.translated_title = translated_title
+        self.question_id = question_id
 
 
-class Answer(db.Model):
+class Answer(Base):
 
     __tablename__ = "answers"
 
-    id = db.Column(db.Integer, primary_key=True)
     answer_body = db.Column(db.String(255))
-    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
-    date_modified = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
     question_id = db.Column(db.Integer, db.ForeignKey(Question.id))
 
     def __init__(self, answer_body, question_id):
         self.answer_body = answer_body
         self.question_id = question_id
 
-    def save(self):
-        """Add an answer to a question
-        """
-        db.session(self)
-        db.session.commit()
+
+
